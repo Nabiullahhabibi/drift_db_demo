@@ -4,7 +4,7 @@ import '../../domain/entities/post.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/post_repository.dart';
 
-class UserDetailsPage extends StatefulWidget {
+class UserDetailsPage extends StatelessWidget {
   final User user;
   final PostRepository postRepository;
 
@@ -15,20 +15,15 @@ class UserDetailsPage extends StatefulWidget {
   });
 
   @override
-  State<UserDetailsPage> createState() =>
-      _UserDetailsPageState();
-}
-
-class _UserDetailsPageState
-    extends State<UserDetailsPage> {
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.user.name),
+        title: Text(user.name),
       ),
-      body: StreamBuilder<List<Post>>(
-        stream: widget.postRepository.watchPosts(),
+      body: FutureBuilder<List<Post>>(
+        future: postRepository.getPostsByUserId(
+          user.id,
+        ),
         builder: (context, snapshot) {
           if (snapshot.connectionState ==
               ConnectionState.waiting) {
@@ -45,17 +40,15 @@ class _UserDetailsPageState
             );
           }
 
-          final allPosts = snapshot.data ?? [];
-
-          final posts = allPosts
-              .where(
-                (post) => post.userId == widget.user.id,
-          )
-              .toList();
+          final posts = snapshot.data ?? [];
 
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // ------------------------------------------------
+              // USER INFORMATION
+              // ------------------------------------------------
+
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -64,18 +57,28 @@ class _UserDetailsPageState
                     CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.user.name,
+                        user.name,
                         style: Theme.of(context)
                             .textTheme
                             .headlineSmall,
                       ),
+
                       const SizedBox(height: 8),
-                      Text(widget.user.email),
+
+                      Text(user.email),
+
                       const SizedBox(height: 8),
+
                       Text(
-                        widget.user.age == null
-                            ? 'Age: Not provided'
-                            : 'Age: ${widget.user.age}',
+                        user.age == null
+                            ? 'Age: Unknown'
+                            : 'Age: ${user.age}',
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Text(
+                        'User ID: ${user.id}',
                       ),
                     ],
                   ),
@@ -83,6 +86,10 @@ class _UserDetailsPageState
               ),
 
               const SizedBox(height: 24),
+
+              // ------------------------------------------------
+              // POSTS
+              // ------------------------------------------------
 
               Text(
                 'Posts (${posts.length})',
@@ -104,19 +111,24 @@ class _UserDetailsPageState
                 ),
 
               ...posts.map(
-                    (post) => Card(
-                  margin: const EdgeInsets.only(
-                    bottom: 10,
-                  ),
-                  child: ListTile(
-                    title: Text(post.title),
-                    subtitle: Text(
-                      post.content,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    (post) {
+                  return Card(
+                    margin: const EdgeInsets.only(
+                      bottom: 10,
                     ),
-                  ),
-                ),
+                    child: ListTile(
+                      leading: const CircleAvatar(
+                        child: Icon(Icons.article),
+                      ),
+                      title: Text(post.title),
+                      subtitle: Text(
+                        post.content,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           );

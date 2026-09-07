@@ -24,7 +24,8 @@ class UsersPage extends StatelessWidget {
       body: StreamBuilder<List<User>>(
         stream: repository.watchUsers(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState ==
+              ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(),
             );
@@ -50,7 +51,9 @@ class UsersPage extends StatelessWidget {
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: users.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            separatorBuilder: (_, __) {
+              return const SizedBox(height: 10);
+            },
             itemBuilder: (context, index) {
               final user = users[index];
 
