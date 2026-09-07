@@ -21,9 +21,34 @@ class Users extends Table {
   )();
 }
 
+class Posts extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get userId => integer().references(
+    Users,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
+
+  TextColumn get title => text().withLength(
+    min: 1,
+    max: 200,
+  )();
+
+  TextColumn get content => text()();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(
+    currentDateAndTime,
+  )();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [];
+}
+
 @DriftDatabase(
   tables: [
     Users,
+    Posts,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -33,5 +58,24 @@ class AppDatabase extends _$AppDatabase {
       : super(executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (Migrator m) async {
+      await m.createAll();
+    },
+
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 2) {
+        await m.createTable(posts);
+      }
+    },
+
+    beforeOpen: (details) async {
+      await customStatement(
+        'PRAGMA foreign_keys = ON',
+      );
+    },
+  );
 }
